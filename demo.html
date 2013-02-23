@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Backbone.HashModels Demo</title>
+    <style>
+        body {
+            font: 1em Tahoma, Verdana, sans-serif;
+            padding: 1em;
+        }
+        .person {
+            padding: 2em;
+        }
+        label {
+            float: left;
+            clear: both;
+            margin-bottom: 1em;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Backbone.HashModels Demo</h1>
+
+<div>Fill in the text boxes below and watch the browser hash change when you switch fields. Try copying the URL and pasting it into a new browser window.</div>
+
+<div id="person" class="person"></div>
+
+<script type="text/template" id="template-person">
+    <label>Name: <input type="text" name="name" class="name" value="<%= name %>"></label>
+    <label>Email: <input type="text" name="email" class="email" value="<%= email %>"></label>
+    <label>Favorite Food: <input type="text" name="food" class="food" value="<%= food %>"></label>
+</script>
+
+<script type="text/javascript" src="test/lib/json2.js"></script>
+<script type="text/javascript" src="test/lib/jquery/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="lib/jquery.history.js"></script>
+<script type="text/javascript" src="test/lib/underscore.js"></script>
+<script type="text/javascript" src="test/lib/backbone.js"></script>
+
+<script type="text/javascript" src="src/backbone.hashmodels.js"></script>
+
+<script type="text/javascript">
+
+    var Person = Backbone.Model.extend({})
+
+    var PersonView = Backbone.View.extend({
+        initialize: function() {
+            this.template = _.template(
+                $("#template-person").html()
+            );
+            this.render();
+            this.listenTo(this.model, "change", this.render);
+        },
+
+        events: {
+            'blur input': 'fieldChanged'
+        },
+
+        render: function() {
+            this.$el.html(this.template(this.model.attributes));
+        },
+
+        fieldChanged: function() {
+            this.model.set({
+                name: this.$('input.name').val(),
+                email: this.$('input.email').val(),
+                food: this.$('input.food').val(),
+            })
+        }
+    })
+
+    var p = new Person({
+        name: '',
+        email: '',
+        food: ''
+    });
+
+    var view = new PersonView({
+        model: p,
+        el: $('#person')
+    });
+
+    Backbone.HashModels.init().addModel(p);
+
+</script>
+</body>
+</html>
