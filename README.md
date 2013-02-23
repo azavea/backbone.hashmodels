@@ -10,15 +10,19 @@ In a large, single-page web application you will often have several UI widgets a
 
 Backbone.HashModels solves this problem by syncronizing the attributes of a set of Backbone models to URL hash by compressing and base64 encoding the attribute values.
 
+## demo
+
+Try out [a demo of Backbone.HashModels in action](http://azavea.github.com/backbone.hashmodels/).
+
 ## dependencies
 
-  - Underscore
-  - Backbone
+  - [Underscore](http://underscorejs.org)
+  - [Backbone](http://backbonejs.org)
 
 By default Backbone.HashModels can use jQuery and the bundled jquery.history.js to manage getting and setting the url hash value. In this case there are 2 additional dependencies:
 
-  - jQuery
-  - Patched version of ``jquery.history.js`` from the ``lib`` directory
+  - [jQuery](http://jquery.com)
+  - Patched version of [``jquery.history.js``](https://github.com/azavea/backbone.hashmodels/blob/master/lib/jquery.history.js) from the ``lib`` directory
 
 ## usage
 
