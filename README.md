@@ -2,6 +2,8 @@
 
 Connect multiple Backbone models to the url hash
 
+[![Build Status](https://travis-ci.org/azavea/backbone.hashmodels.png?branch=master)](https://travis-ci.org/azavea/backbone.hashmodels)
+
 ## overview
 
 In a large, single-page web application you will often have several UI widgets adusting the content of the page (filtering visable items, changeing sort ordering, setting color preferences, selecting items, etc.) If you want to save and restore these settings for all of these widgets, and share them with a copypasteable URL, traditional push state is not a good fit.
