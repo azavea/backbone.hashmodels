@@ -1,4 +1,4 @@
 language: node_js
 node_js:
    - "0.8"
-before_install: sudo npm install -g testem
+before_install: rm `which firefox`
