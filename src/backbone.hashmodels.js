@@ -296,7 +296,11 @@ Backbone.HashModels = (function(Backbone, _, $){
             });
         } else {
             _.each(models, function resetToInitialState(model, index) {
-                model.set(initialModelStates[index]);
+                if (model.setState) {
+                    model.setState(initialModelStates[index]);
+                } else {
+                    model.set(initialModelStates[index]);
+                }
             });
         }
         state = newState;
@@ -354,7 +358,11 @@ Backbone.HashModels = (function(Backbone, _, $){
             // If you load the page with a initial hash string, sync the
             // model object to with the hash state
             if (state[modelIndex]) {
-                model.set(state[modelIndex]);
+                if (model.setState) {
+                    model.setState(state[modelIndex]);
+                } else {
+                    model.set(state[modelIndex]);
+                }
             }
 
             model.on(eventsToWatch, handleModelChanged, model);
