@@ -68,4 +68,53 @@ describe('Backbone.HashModels', function(){
         this.setNewHashValue('');
         expect(m.attributes).toEqual({foo: 'bar', monkey: 'fight', rocket: 'blast'});
     });
-});
+
+    it('will call a getState method on add', function () {
+        var Person = Backbone.Model.extend({
+            getState: function () {}
+        });
+        var p = new Person({'name': 'Nobody'});
+        spyOn(p, 'getState');
+        Backbone.HashModels.addModel(p);
+        expect(p.getState).toHaveBeenCalled();
+    });
+
+    it('will call a getState method on change, if available', function () {
+        var Person = Backbone.Model.extend({
+            getState: function () {
+                return { personName: this.name };
+            }
+        });
+        var p = new Person({'name': 'Nobody'});
+        spyOn(p, 'getState');
+        Backbone.HashModels.addModel(p);
+        p.set('name', 'Justin');
+        expect(p.getState.callCount).toEqual(2);
+    });
+
+    it('will call a setState method if available', function () {
+        var Person = Backbone.Model.extend({
+            setState: function (state) {}
+        });
+        var p = new Person({'name': 'Nobody'});
+        spyOn(p, 'setState');
+        Backbone.HashModels.addModel(p);
+        this.setNewHashValue('W251bGxd');
+        expect(p.setState).toHaveBeenCalled();
+    });
+
+    it('will use getState and setState to manage persistance', function() {
+        var Person = Backbone.Model.extend({
+            getState: function () {
+                return { personName: this.get('name') };
+            },
+            setState: function (state) {
+                this.set('name', state.personName);
+            }
+        });
+        var p = new Person({'name': 'Nobody'});
+        Backbone.HashModels.addModel(p);
+        this.setNewHashValue('W3sicGVyc29uTmFtZSI6Ikp1c3RpbiJ9XQ==');
+        expect(p.get('name')).toEqual('Justin');
+    });
+} );

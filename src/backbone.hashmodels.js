@@ -251,10 +251,14 @@ Backbone.HashModels = (function(Backbone, _, $){
         var modelIndex = _.indexOf(models, model);
         var newValues;
         try {
-            if (watchedModelAttributes[modelIndex]) {
-                newValues = _.pick(model.attributes, watchedModelAttributes[modelIndex]);
+           if (model.getState) {
+                newValues = model.getState();
             } else {
-                newValues = model.attributes;
+                if (watchedModelAttributes[modelIndex]) {
+                    newValues = _.pick(model.attributes, watchedModelAttributes[modelIndex]);
+                } else {
+                    newValues = model.attributes;
+                }
             }
             state[modelIndex] = newValues;
             stateString = encodeStateObject(state);
@@ -277,9 +281,17 @@ Backbone.HashModels = (function(Backbone, _, $){
             newState = decodeStateObject(hash);
             _.each(newState, function(value, index) {
                 if (models[index] && value) {
-                    models[index].set(value);
+                    if (models[index].setState) {
+                        models[index].setState(value);
+                    } else {
+                        models[index].set(value);
+                    }
                 } else if (models[index]) {
-                    models[index].set(initialModelStates[index]);
+                    if (models[index].setState) {
+                        models[index].setState(initialModelStates[index]);
+                    } else {
+                        models[index].set(initialModelStates[index]);
+                    }
                 }
             });
         } else {
@@ -315,15 +327,27 @@ Backbone.HashModels = (function(Backbone, _, $){
         addModel: function(model, watchedAttributes) {
             var eventsToWatch = 'change';
             var modelIndex = models.length;
+            var initialState;
+
             models.push(model);
+
+            if (model.getState) {
+                initialState = model.getState();
+            } else {
+                if (watchedAttributes && watchedAttributes.length) {
+                    initialState = _.pick(model.attributes, watchedAttributes);
+                } else {
+                    initialState = _.extend({}, model.attributes);
+                }
+            }
+            initialModelStates.push(initialState);
+
             if (watchedAttributes && watchedAttributes.length) {
-                initialModelStates.push(_.pick(model.attributes, watchedAttributes));
                 watchedModelAttributes.push(watchedAttributes);
                 eventsToWatch = _.map(watchedAttributes, function(name) {
                     return 'change:' + name;
                 }).join(' ');
             } else {
-                initialModelStates.push(_.extend({}, model.attributes));
                 watchedModelAttributes.push(null);
             }
 
