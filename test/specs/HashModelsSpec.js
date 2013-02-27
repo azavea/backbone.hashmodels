@@ -117,4 +117,20 @@ describe('Backbone.HashModels', function(){
         this.setNewHashValue('W3sicGVyc29uTmFtZSI6Ikp1c3RpbiJ9XQ==');
         expect(p.get('name')).toEqual('Justin');
     });
+
+    it('triggers a change event when the hash changes', function(){
+        var test = this;
+        var m = new Backbone.Model({foo: 'bar', monkey: 'fight'});
+        Backbone.HashModels.addModel(m);
+        test.hash = '';
+        Backbone.HashModels.on('change', function(hash) {
+            test.hash = hash
+        })
+        runs(function(){
+            m.set('foo', 'baz');
+        })
+        runs(function() {
+            expect(test.hash).toEqual('W3siZm9vIjoiYmF6IiwibW9ua2V5xIbEgmlnaHQifV0=');
+        })
+    });
 } );
