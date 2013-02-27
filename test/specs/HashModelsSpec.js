@@ -124,13 +124,13 @@ describe('Backbone.HashModels', function(){
         Backbone.HashModels.addModel(m);
         test.hash = '';
         Backbone.HashModels.on('change', function(hash) {
-            test.hash = hash
-        })
+            test.hash = hash;
+        });
         runs(function(){
             m.set('foo', 'baz');
-        })
+        });
         runs(function() {
             expect(test.hash).toEqual('W3siZm9vIjoiYmF6IiwibW9ua2V5xIbEgmlnaHQifV0=');
-        })
+        });
     });
 } );
