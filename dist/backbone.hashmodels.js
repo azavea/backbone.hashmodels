@@ -263,6 +263,7 @@ Backbone.HashModels = (function(Backbone, _, $){
             state[modelIndex] = newValues;
             stateString = encodeStateObject(state);
             updateHash(stateString);
+            HashModels.trigger('change', stateString);
         } catch (err) {
             // Unable to parse the new state; reset to old state
             state = oldState;
@@ -305,6 +306,7 @@ Backbone.HashModels = (function(Backbone, _, $){
         }
         state = newState;
         stateString = newStateString;
+        HashModels.trigger('change', stateString);
     };
 
     /************************************************************
@@ -368,6 +370,8 @@ Backbone.HashModels = (function(Backbone, _, $){
             model.on(eventsToWatch, handleModelChanged, model);
         }
     };
+
+    _.extend(HashModels, Backbone.Events);
 
     return HashModels;
 })(Backbone, _, jQuery);
