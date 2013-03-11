@@ -208,12 +208,12 @@ Backbone.HashModels = (function(Backbone, _, $){
      Private members
     ************************************************************/
 
-    var models = [];
-    var watchedModelAttributes = [];
-    var initialModelStates = [];
-    var state = [];
+    var models = {};
+    var watchedModelAttributes = {};
+    var initialModelStates = {};
+    var state = {};
     var stateString = '';
-    var pendingState = [];
+    var pendingState = {};
     var pendingStateString = '';
 
     var validdateEncodedCompressesStateString = function (s) {
@@ -248,27 +248,35 @@ Backbone.HashModels = (function(Backbone, _, $){
 
     var handleModelChanged = function (model) {
         // backup the state in case there is an error changing it.
-        var oldState = _.extend([], state);
+        var oldState = _.extend({}, state);
         var oldStateString = stateString;
-        var modelIndex = _.indexOf(models, model);
         var newValues;
+        var modelId;
+        _.each(models, function(value, key, obj){
+            if (value === model) {
+                modelId = key;
+            }
+        });
+        if (modelId === undefined) {
+            throw "Could not determine ID for model " + JSON.stringify(model.attributes);
+        }
         try {
            if (model.getState) {
                 newValues = model.getState();
             } else {
-                if (watchedModelAttributes[modelIndex]) {
-                    newValues = _.pick(model.attributes, watchedModelAttributes[modelIndex]);
+                if (watchedModelAttributes[modelId]) {
+                    newValues = _.pick(model.attributes, watchedModelAttributes[modelId]);
                 } else {
                     newValues = model.attributes;
                 }
             }
             if (options.updateOnChange) {
-                state[modelIndex] = newValues;
+                state[modelId] = newValues;
                 stateString = encodeStateObject(state);
                 updateHash(stateString);
                 HashModels.trigger('change', stateString);
             } else {
-                pendingState[modelIndex] = newValues;
+                pendingState[modelId] = newValues;
                 pendingStateString = encodeStateObject(pendingState);
             }
         } catch (err) {
@@ -279,7 +287,7 @@ Backbone.HashModels = (function(Backbone, _, $){
     };
 
     var handleHashChanged = function (hash) {
-        var newState = [];
+        var newState = {};
         var newStateString = '';
         if (hash === stateString) {
             return;
@@ -287,27 +295,27 @@ Backbone.HashModels = (function(Backbone, _, $){
         if (hash) {
             newStateString = hash;
             newState = decodeStateObject(hash);
-            _.each(newState, function(value, index) {
-                if (models[index] && value) {
-                    if (models[index].setState) {
-                        models[index].setState(value);
+            _.each(newState, function(value, key, obj) {
+                if (models[key] && value) {
+                    if (models[key].setState) {
+                        models[key].setState(value);
                     } else {
-                        models[index].set(value);
+                        models[key].set(value);
                     }
-                } else if (models[index]) {
-                    if (models[index].setState) {
-                        models[index].setState(initialModelStates[index]);
+                } else if (models[key]) {
+                    if (models[key].setState) {
+                        models[key].setState(initialModelStates[key]);
                     } else {
-                        models[index].set(initialModelStates[index]);
+                        models[key].set(initialModelStates[key]);
                     }
                 }
             });
         } else {
-            _.each(models, function resetToInitialState(model, index) {
+            _.each(models, function resetToInitialState(model, key, obj) {
                 if (model.setState) {
-                    model.setState(initialModelStates[index]);
+                    model.setState(initialModelStates[key]);
                 } else {
-                    model.set(initialModelStates[index]);
+                    model.set(initialModelStates[key]);
                 }
             });
         }
@@ -326,12 +334,12 @@ Backbone.HashModels = (function(Backbone, _, $){
     var HashModels =  {
         init: function(opts) {
             options = _.extend(options, opts);
-            models = [];
-            watchedModelAttributes = [];
-            initialModelStates = [];
-            state = [];
+            models = {};
+            watchedModelAttributes = {};
+            initialModelStates = {};
+            state = {};
             stateString = '';
-            pendingState = [];
+            pendingState = {};
             pendingStateString = '';
 
             updateHash = options.hashUpdateCallback || defaultHashUpdateFunction;
@@ -344,52 +352,70 @@ Backbone.HashModels = (function(Backbone, _, $){
             return this;
         },
 
-        addModel: function(model, watchedAttributes) {
+        addModel: function(model, opts) {
             var eventsToWatch = 'change';
-            var modelIndex = models.length;
             var initialState;
+            var modelOptions;
+            if (_.isString(opts)) {
+                modelOptions = {id: opts};
+            } else {
+                modelOptions = _.extend({}, opts);
+            }
+            var modelId = modelOptions.id || model.id;
 
-            models.push(model);
+            if (!modelId) {
+                throw new Error("Options does not contain a truthy 'id' property and the model does not have a truthy 'id' attribute");
+            }
+
+            if (models[modelId] !== undefined) {
+                throw new Error( "A model has already been added with id '" + modelId + '"');
+            }
+            models[modelId] = model;
 
             if (model.getState) {
                 initialState = model.getState();
             } else {
-                if (watchedAttributes && watchedAttributes.length) {
-                    initialState = _.pick(model.attributes, watchedAttributes);
+                if (modelOptions.attributes && modelOptions.attributes.length) {
+                    initialState = _.pick(model.attributes, modelOptions.attributes);
                 } else {
                     initialState = _.extend({}, model.attributes);
                 }
             }
-            initialModelStates.push(initialState);
+            initialModelStates[modelId] = initialState;
 
-            if (watchedAttributes && watchedAttributes.length) {
-                watchedModelAttributes.push(watchedAttributes);
-                eventsToWatch = _.map(watchedAttributes, function(name) {
+            if (modelOptions.attributes && modelOptions.attributes.length) {
+                watchedModelAttributes[modelId] = _.extend({}, modelOptions.attributes);
+                eventsToWatch = _.map(modelOptions.attributes, function(name) {
                     return 'change:' + name;
                 }).join(' ');
             } else {
-                watchedModelAttributes.push(null);
+                 watchedModelAttributes[modelId] = null;
             }
 
             // If you load the page with a initial hash string, sync the
             // model object to with the hash state
-            if (state[modelIndex]) {
+            if (state[modelId]) {
                 if (model.setState) {
-                    model.setState(state[modelIndex]);
+                    model.setState(state[modelId]);
                 } else {
-                    model.set(state[modelIndex]);
+                    model.set(state[modelId]);
                 }
             }
 
             model.on(eventsToWatch, handleModelChanged, model);
+            this.trigger('add', model, modelId);
+            return modelId;
         },
 
         update: function() {
-            state = _.extend([], pendingState);
+            state = _.extend({}, pendingState);
             stateString = pendingStateString;
             updateHash(stateString);
             HashModels.trigger('change', stateString);
-        }
+        },
+
+        decodeStateObject: decodeStateObject,
+        encodeStateObject: encodeStateObject
     };
 
     _.extend(HashModels, Backbone.Events);
