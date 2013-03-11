@@ -69,7 +69,9 @@ You can pass two functions to the ``Backbone.HashModels.init()`` method to plug 
         // Track all the properties of a model
 
         var m = new Backbone.Model({foo: "bar"});
-        Backbone.HashModels.addModel(m);
+        // Models must have either there own 'id' attribute, or you may pass 
+        // in a state ID when you add the model to Backbone.HashModels
+        Backbone.HashModels.addModel(m, "state-id");
         m.set(foo: "baz"); // This will trigger the hash to change
 
         // Track only selected properties of a model
@@ -78,7 +80,10 @@ You can pass two functions to the ``Backbone.HashModels.init()`` method to plug 
             email: "",
             colorScheme: "Dark"
         })
-        Backbone.HashModels.addModel(prefs, ['colorScheme']);
+        Backbone.HashModels.addModel(prefs, {
+            id: 'user',
+            attributes: ['colorScheme']
+        });
 
         // This will trigger the hash to change
         prefs.set('colorScheme', 'Light');
