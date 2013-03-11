@@ -2,11 +2,14 @@ describe('Backbone.HashModels', function(){
     beforeEach(function(){
         var self = this;
         window.HASH_VALUE = undefined;
-        Backbone.HashModels.init(function (hash) {
-            window.HASH_VALUE = hash;
-            console.log('HASH_VALUE=' + hash);
-        }, function(cb) {
-            self.setNewHashValue = cb;
+        Backbone.HashModels.init({
+            hashUpdateCallback: function (hash) {
+                window.HASH_VALUE = hash;
+                console.log('HASH_VALUE=' + hash);
+            },
+            setupHashMonitorCallback: function(cb) {
+                self.setNewHashValue = cb;
+            }
         });
     });
 
@@ -131,6 +134,59 @@ describe('Backbone.HashModels', function(){
         });
         runs(function() {
             expect(test.hash).toEqual('W3siZm9vIjoiYmF6IiwibW9ua2V5xIbEgmlnaHQifV0=');
+        });
+    });
+
+    it('does not update the hash if updateOnChange is false', function(){
+        Backbone.HashModels.init({
+            updateOnChange: false
+        });
+        var m = new Backbone.Model({foo: 'bar', monkey: 'fight'});
+        Backbone.HashModels.addModel(m);
+        var callback = jasmine.createSpy('hash change callback');
+        Backbone.HashModels.on('change', callback);
+        runs(function(){
+            m.set('foo', 'baz');
+        });
+        runs(function() {
+            expect(callback).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('update method', function(){
+        it('exists', function(){
+            expect(Backbone.HashModels.update).toBeAFunction();
+        });
+
+        it('updates the hash when called', function(){
+            Backbone.HashModels.init({
+                updateOnChange: false
+            });
+            var m = new Backbone.Model({foo: 'bar', monkey: 'fight'});
+            Backbone.HashModels.addModel(m);
+            var callback = jasmine.createSpy('hash change callback');
+            Backbone.HashModels.on('change', callback);
+
+            runs(function(){
+                m.set('foo', 'baz');
+            });
+            runs(function() {
+                expect(callback).not.toHaveBeenCalled();
+            });
+
+            runs(function(){
+                m.set('monkey', 'calm');
+            });
+            runs(function() {
+                expect(callback).not.toHaveBeenCalled();
+            });
+
+            runs(function() {
+                Backbone.HashModels.update();
+            });
+            runs(function() {
+                expect(callback).toHaveBeenCalledWith('W3siZm9vIjoiYmF6IiwibW9ua2V5xIYiY2FsbSJ9XQ==');
+            });
         });
     });
 } );

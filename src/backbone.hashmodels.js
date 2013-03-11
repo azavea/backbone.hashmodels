@@ -213,6 +213,8 @@ Backbone.HashModels = (function(Backbone, _, $){
     var initialModelStates = [];
     var state = [];
     var stateString = '';
+    var pendingState = [];
+    var pendingStateString = '';
 
     var validdateEncodedCompressesStateString = function (s) {
         if (!s) {
@@ -260,10 +262,15 @@ Backbone.HashModels = (function(Backbone, _, $){
                     newValues = model.attributes;
                 }
             }
-            state[modelIndex] = newValues;
-            stateString = encodeStateObject(state);
-            updateHash(stateString);
-            HashModels.trigger('change', stateString);
+            if (options.updateOnChange) {
+                state[modelIndex] = newValues;
+                stateString = encodeStateObject(state);
+                updateHash(stateString);
+                HashModels.trigger('change', stateString);
+            } else {
+                pendingState[modelIndex] = newValues;
+                pendingStateString = encodeStateObject(pendingState);
+            }
         } catch (err) {
             // Unable to parse the new state; reset to old state
             state = oldState;
@@ -309,21 +316,28 @@ Backbone.HashModels = (function(Backbone, _, $){
         HashModels.trigger('change', stateString);
     };
 
+    var options = {
+        updateOnChange: true
+    };
+
     /************************************************************
      Public Interface
      ************************************************************/
     var HashModels =  {
-        init: function(hashUpdateCallback, setupHashMonitorCallback) {
+        init: function(opts) {
+            options = _.extend(options, opts);
             models = [];
             watchedModelAttributes = [];
             initialModelStates = [];
             state = [];
             stateString = '';
+            pendingState = [];
+            pendingStateString = '';
 
-            updateHash = hashUpdateCallback || defaultHashUpdateFunction;
+            updateHash = options.hashUpdateCallback || defaultHashUpdateFunction;
 
-            if (setupHashMonitorCallback) {
-                setupHashMonitorCallback(handleHashChanged);
+            if (options.setupHashMonitorCallback) {
+                options.setupHashMonitorCallback(handleHashChanged);
             } else {
                 setupDefaultHashMonitorCallback(handleHashChanged);
             }
@@ -368,6 +382,13 @@ Backbone.HashModels = (function(Backbone, _, $){
             }
 
             model.on(eventsToWatch, handleModelChanged, model);
+        },
+
+        update: function() {
+            state = _.extend([], pendingState);
+            stateString = pendingStateString;
+            updateHash(stateString);
+            HashModels.trigger('change', stateString);
         }
     };
 

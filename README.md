@@ -39,23 +39,27 @@ By default Backbone.HashModels can use jQuery and the bundled jquery.history.js 
 
 ### custom setup
 
-You can pass two functions to the ``Backbone.HashModels.init()`` method to plug in your own state management.
+You can pass two functions to the ``Backbone.HashModels.init()`` method to plug in your own state management or disable automatic hash updated when models change.
 
     <script type="text/javascript" src="underscore.js"></script>
     <script type="text/javascript" src="backbone.js"></script>
     <script type="text/javascript" src="backbone.hashmodels.js"></script>
     <script type="text/javascript">
-        Backbone.HashModels.init(
-            function (hash) {
+        Backbone.HashModels.init({
+            hashUpdateCallback: function (hash) {
                 // TODO: This will be called whenever a model
-                changes and a new hash is generated. Save the hash
-                somewhere.
+                // changes and a new hash is generated. Save the hash
+                // somewhere.
             },
-            function (callbackFunction) {
+            setupHashMonitorCallback: function (callbackFunction) {
                 // TODO: When the hash value changes, call
-                callbackFunction with the updated value
-            }
-        );
+                // callbackFunction with the updated value
+            },
+            // The default value is true. If you set this to false then
+            // you must manually call Backbone.HashModels.update() to
+            // update the hash.
+            updateOnChange: false
+        });
     </script>
 
 ### track your models
