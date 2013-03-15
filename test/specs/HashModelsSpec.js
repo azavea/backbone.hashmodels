@@ -225,5 +225,79 @@ describe('Backbone.HashModels', function(){
                 expect(callback).toHaveBeenCalledWith('eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiIsIsSHbmtlecSSY2FsbSJ9fQ==');
             });
         });
+
+        it('returns the same hash when called immediately after loading an initial hash', function () {
+            var test = this;
+            Backbone.HashModels.init({
+                updateOnChange: false
+            });
+            Backbone.HashModels.on('change', function(hash) {
+                test.hash = hash;
+            });
+            this.setNewHashValue('eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiJ9fQ==');
+            var m = new Backbone.Model({foo: 'bar'});
+            Backbone.HashModels.addModel(m, 'test-model');
+            expect(m.attributes).toEqual({foo: 'baz'}, 'The model state was changed when added after an inital hash state');
+
+            Backbone.HashModels.update();
+            expect(test.hash).toEqual('eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiJ9fQ==');
+            expect(m.attributes).toEqual({foo: 'baz'});
+        });
+
+        it('mixes initial hash state with pending hash state', function () {
+            var test = this;
+            Backbone.HashModels.init({
+                updateOnChange: false
+            });
+            Backbone.HashModels.on('change', function(hash) {
+                test.hash = hash;
+            });
+            this.setNewHashValue('eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiJ9fQ==');
+            var m = new Backbone.Model({foo: 'bar'});
+            Backbone.HashModels.addModel(m, 'test-model');
+            expect(m.attributes).toEqual({foo: 'baz'}, 'State of "m" was changed when added after an inital hash state');
+
+            var m2 = new Backbone.Model({bing: 'bong'});
+            Backbone.HashModels.addModel(m2, 'test-model-2');
+            expect(m2.attributes).toEqual({bing: 'bong'}, 'm2 state is unchanged after loading initial hash state');
+
+            m2.set('bing', 'bang');
+
+            Backbone.HashModels.update();
+
+            expect(test.hash).toEqual('eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiJ9LMSBxIPEhcSHxIlsLTLEjMSAYmluZ8SSxJTEpsSXfQ==');
+            expect(m.attributes).toEqual({foo: 'baz'});
+            expect(m2.attributes).toEqual({bing: 'bang'});
+        });
+
+        it('preserves state for multiple models on update', function () {
+            var test = this;
+            var initialHash = 'eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMImJheiJ9LMSBxIPEhcSHxIlsLTLEjMSAYmluZ8SSxJTEpsSXfQ==';
+            var expectedHashAfterUpdate = 'eyJ0ZXN0LW1vZGVsIjrEgGZvb8SMIkJSQVoifSzEgcSDxIXEh8SJbC0yxIzEgGJpbmfEkmJhxKfEmH0=';
+            Backbone.HashModels.init({
+                updateOnChange: false
+            });
+            Backbone.HashModels.on('change', function(hash) {
+                test.hash = hash;
+            });
+            this.setNewHashValue(initialHash);
+
+            var m = new Backbone.Model({});
+            Backbone.HashModels.addModel(m, 'test-model');
+            expect(m.attributes).toEqual({foo: 'baz'}, 'State of "m" was changed when added after an inital hash state');
+
+
+            var m2 = new Backbone.Model({});
+            Backbone.HashModels.addModel(m2, 'test-model-2');
+            expect(m2.attributes).toEqual({bing: 'bang'}, 'State of "m2" was changed when added after an initial state');
+
+            m.set('foo', 'BRAZ');
+
+            Backbone.HashModels.update();
+
+            expect(test.hash).toEqual(expectedHashAfterUpdate);
+            expect(m.attributes).toEqual({foo: 'BRAZ'});
+            expect(m2.attributes).toEqual({bing: 'bang'});
+        });
     });
 } );
