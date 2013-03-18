@@ -213,7 +213,7 @@ Backbone.HashModels = (function(Backbone, _, $){
     var initialModelStates = {};
     var state = {};
     var stateString = '';
-    var pendingState = {};
+    var pendingState;
     var pendingStateString = '';
 
     var validdateEncodedCompressesStateString = function (s) {
@@ -276,6 +276,7 @@ Backbone.HashModels = (function(Backbone, _, $){
                 updateHash(stateString);
                 HashModels.trigger('change', stateString);
             } else {
+                pendingState = pendingState || {};
                 pendingState[modelId] = newValues;
                 pendingStateString = encodeStateObject(pendingState);
             }
@@ -339,7 +340,7 @@ Backbone.HashModels = (function(Backbone, _, $){
             initialModelStates = {};
             state = {};
             stateString = '';
-            pendingState = {};
+            pendingState = undefined;
             pendingStateString = '';
 
             updateHash = options.hashUpdateCallback || defaultHashUpdateFunction;
@@ -408,8 +409,10 @@ Backbone.HashModels = (function(Backbone, _, $){
         },
 
         update: function() {
-            state = _.extend({}, pendingState);
-            stateString = pendingStateString;
+            if (pendingState !== undefined) {
+                state = _.extend(state, pendingState);
+                stateString = encodeStateObject(state);
+            }
             updateHash(stateString);
             HashModels.trigger('change', stateString);
         },
