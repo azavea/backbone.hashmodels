@@ -68,6 +68,25 @@ describe('Backbone.HashModels', function(){
         expect(window.HASH_VALUE).toBeDefined();
     });
 
+    it('serializes and deserializes POJOs', function () {
+        var hash,
+            m = new Backbone.Model({ foobject: {} });
+
+        Backbone.HashModels.addModel(m, 'test-model');
+        m.set('foobject', { foo: 'bar', foo2: 'bar2',
+                            foo3: ['bar4', 'bar5'] });
+
+        hash = window.HASH_VALUE;
+
+        this.setNewHashValue('');
+        expect(m.get('foobject')).toEqual({});
+
+        this.setNewHashValue(hash);
+        expect(m.get('foobject')).toEqual({ foo: 'bar', 
+                                            foo2: 'bar2',
+                                            foo3: ['bar4', 'bar5'] });
+    });
+
     it('updates a model when a hash is changed', function () {
         var m = new Backbone.Model({foo: 'bar'});
         Backbone.HashModels.addModel(m, 'test-model');
