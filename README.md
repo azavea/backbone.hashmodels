@@ -39,7 +39,7 @@ By default Backbone.HashModels can use jQuery and the bundled jquery.history.js 
 
 ### custom setup
 
-You can pass two functions to the ``Backbone.HashModels.init()`` method to plug in your own state management or disable automatic hash updated when models change.
+You can pass two functions to the ``Backbone.HashModels.init()`` method to plug in your own state management or disable automatic hash updating when models change.
 
     <script type="text/javascript" src="underscore.js"></script>
     <script type="text/javascript" src="backbone.js"></script>
