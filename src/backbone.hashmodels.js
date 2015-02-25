@@ -413,6 +413,10 @@ Backbone.HashModels = (function(Backbone, _, $){
                 state = _.extend(state, pendingState);
                 stateString = encodeStateObject(state);
             }
+            this.triggerStateChange(stateString);
+        },
+
+        triggerStateChange: function(stateString) {
             updateHash(stateString);
             HashModels.trigger('change', stateString);
         },
