@@ -418,7 +418,7 @@ Backbone.HashModels = (function(Backbone, _, $){
 
         triggerStateChange: function(stateString) {
             updateHash(stateString);
-            HashModels.trigger('change', stateString);
+            handleHashChanged(stateString);
         },
 
         decodeStateObject: decodeStateObject,
