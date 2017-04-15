@@ -394,12 +394,16 @@ Backbone.HashModels = (function(Backbone, _, $){
             }
 
             // If you load the page with a initial hash string, sync the
-            // model object to with the hash state
+            // model object with the hash state
             if (state[modelId]) {
                 if (model.setState) {
                     model.setState(state[modelId]);
                 } else {
                     model.set(state[modelId]);
+                }
+                if (!options.updateOnChange) {
+                    pendingState[modelId] = state[modelId];
+                    pendingStateString = encodeStateObject(pendingState);
                 }
             }
 
